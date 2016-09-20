@@ -1,0 +1,60 @@
+#!/usr/bin/env kross
+# -*- coding: utf-8 -*-
+# Author=Sam
+# Email=sam_ktorrent_wiki at the commercial domain inet-design.
+# Website=http://www.inet-design.com/
+# License=GPL
+# Script repository=http://www.inet-design.com/ktorrent-scripts-and-information.html
+ScriptName = "statusChanged.py"
+# Last Edit Date : 4/27/10 1:15 PM
+#
+# Default actions to apply to torrents changing status
+#   Move to bottom of Queue Manager
+#   Add publicbt (enable http)
+#   (Future: check and re-set limits, re-start)
+#
+
+import KTorrent
+import KTScriptingPlugin
+import Kross
+
+class StatusChanged:
+	def __init__(self):
+		KTorrent.log("===========>     Starting StatusChanged Script")
+		KTorrent.connect("torrentAdded(const QString &)",self.torrentAdded)
+		tors = KTorrent.torrents()
+		# bind to signals for each torrent
+		for t in tors:
+			self.torrentAdded(t)
+
+	def changePriority(self,tor):
+		tor.setPriority(1)
+		KTorrent.orderQueue()
+		KTorrent.log("===========>     We are finished with: %s, %s  Priority has been changed to: %i, and it's been re-queued." % (tor.name(),tor.infoHash(),tor.priority()))
+		KTorrent.start(tor.infoHash())
+#		KTorrent.queue(tor.infoHash()) # removed
+		tor.addTracker("udp://tracker.publicbt.com:80/announce")
+		tor.addTracker("http://tracker.publicbt.com:80/announce")
+		tor.setTrackerEnabled("udp://tracker.publicbt.com:80/announce",0)
+		tor.setTrackerEnabled("http://tracker.publicbt.com:80/announce",1)
+
+	def torrentFinished(self,tor):
+		self.changePriority(tor)
+
+	def seedingAutoStopped(self,tor,reason):
+		self.changePriority(tor)
+
+	def connectSignals(self,tor):
+		KTorrent.log("connectSignals " + tor.name())
+		tor.connect("finished(QObject* )",self.torrentFinished)
+		tor.connect("seedingAutoStopped(QObject* ,const QString & )",self.seedingAutoStopped)
+
+	def torrentAdded(self,ih):
+		tor = KTorrent.torrent(ih)
+		self.connectSignals(tor)
+
+statchange = StatusChanged()
+
+def unload():
+	global statchange
+	del statchange

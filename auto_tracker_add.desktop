@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Automatic Adding Trackers
+Comment=Script to automatically add trackers when they start 
+Type=KTorrentScript
+Icon=kt-tracker-add
+X-KTorrent-Script-Author=kh
+X-KTorrent-Script-Email=kh0324@gmail.com
+X-KTorrent-Script-Website=http://ktorrent.org/
+X-KTorrent-Script-License=GPL
+X-KTorrent-Script-File=auto_tracker_add.py
+

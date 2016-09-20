@@ -1,0 +1,55 @@
+#!/usr/bin/env kross
+# -*- coding: utf-8 -*-
+# Author=Sam
+# Email=sam_ktorrent_wiki at the commercial domain inet-design.
+# Website=http://www.inet-design.com/
+# License=GPL
+# Script repository=http://www.inet-design.com/ktorrent-scripts-and-information.html
+ScriptName = "torrentAdded.py"
+#
+# Default actions to apply to newly added torrents
+#   UnEnable all trackers
+#   Add openbittorrent (enable http)
+#   Add publicbt (enable http)
+#   Move to top of Queue Manager
+#
+#
+
+import KTorrent
+import KTScriptingPlugin
+import Kross
+
+class TorrentAddedScript:
+	def __init__(self):
+		KTorrent.log("=========>  Starting TorrentAddedScript")
+		KTorrent.connect("torrentAdded(const QString &)",self.torrentAdded)
+
+	def torrentAdded(self,info_hash):
+		tor = KTorrent.torrent(info_hash)
+		tors = KTorrent.torrents()
+		KTorrent.log("=========>  torrentAdded=%s,  Priority = %i, " % (tor.name(),tor.priority()))
+		trackers = tor.trackers()
+		for tracker in trackers:
+			tor.setTrackerEnabled(tracker,0)
+		tor.addTracker("udp://tracker.openbittorrent.com:80/announce")
+		tor.addTracker("http://tracker.openbittorrent.com/announce")
+		tor.setTrackerEnabled("udp://tracker.openbittorrent.com:80/announce",0)
+		tor.setTrackerEnabled("http://tracker.openbittorrent.com/announce",1)
+		tor.addTracker("udp://tracker.publicbt.com:80/announce")
+		tor.addTracker("http://tracker.publicbt.com:80/announce")
+		tor.setTrackerEnabled("udp://tracker.publicbt.com:80/announce",0)
+		tor.setTrackerEnabled("http://tracker.publicbt.com:80/announce",1)
+		tor.setPriority(len(tors)) #works > 4.0 beta2
+		KTorrent.orderQueue()
+
+	def unload(self):
+		KTorrent.disconnect("torrentAdded(const QString &)",self.torrentAdded)
+		KTorrent.log("=========>  Removing TorrentAddedScript")
+
+tA = TorrentAddedScript()
+
+# Called when script is unloaded
+def unload():
+	global tA
+	tA.unload()
+	del tA

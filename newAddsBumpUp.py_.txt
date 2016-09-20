@@ -1,0 +1,62 @@
+#!/usr/bin/env kross
+# -*- coding: utf-8 -*-
+
+#  Throw away script!  George is writing (&fixing) API calls that will make this not needed.
+#    (well, you'll need this until 4.x stable gets released)
+#  This script will move a set of torrents (or single torrent) from the bottom of the queue heap to the top.
+#  With KT 3.4, you will have to manually move a torrent in the queue between each use to get KT to reindex the queue.
+#
+#    Manually set the first three variables.
+#
+#  ! Use the Order number as shown in the GUI Queue Manager!  (Not internal priority numbers) !
+#
+#
+
+import KTorrent
+import KTScriptingPlugin
+import Kross
+
+tors = KTorrent.torrents()
+
+StickThemAtOrderNum = 1
+  # Use the Order number where you want them added after.
+    # Try?  Max downloads plus one.  Or, the order number of your last Running Download torrent.
+WeDoing = 1326
+  # Use the Order number of the uppermost torrent you want moved from the bottom to the top.
+DontDo = 9999
+  # Use an Order number
+    # a) Set to one more than WeDoing to move a sigle torrent to the top area of the queue.
+    # b) Set to indicate how many at the very bottom do you not want moved.
+    # c) Set to 9999 to ignore this function. (Moves everything from WeDoing and below to top of queue)
+
+Top = len(tors) - WeDoing + 1
+Bot = len(tors) - DontDo + 1
+StickThemAt =  len(tors) - StickThemAtOrderNum + 1
+
+KTorrent.log("====>>>>  newAddsBumpUp Num torrents : %i, Top = %i, Bot = %i, StickThemAt = %i" % (len(tors), Top, Bot, StickThemAt))
+
+torList = []
+
+for t in tors:
+	tor = KTorrent.torrent(t)
+	if (tor.priority() > Bot) and (tor.priority() <= Top):
+		KTorrent.log("====>>>>  newAddsBumpUp Found Torrent = %s , Priority = %s" % (tor.name(), tor.priority()))
+		torList.append(tor.infoHash())
+
+for t in torList:
+	tor = KTorrent.torrent(t)
+	tor.setPriority(StickThemAt)
+	KTorrent.orderQueue()
+	KTorrent.log("====>>>>  newAddsBumpUp Moving Torrent = %s , Priority = %s" % (tor.name(), tor.priority()))
+
+
+# Extra junk from testing
+#for t in tors:
+#	tor = KTorrent.torrent(t)
+#	if (tor.priority() > Bot) and (tor.priority() <= Top):
+#		KTorrent.log("====>>>>  newAddsBumpUp Display BT  Torrent = %s , Priority = %s" % (tor.name(), tor.priority()))
+#
+#for t in tors:
+#	tor = KTorrent.torrent(t)
+#	if (tor.priority() >= (StickThemAt - 1)) and (tor.priority() <= (StickThemAt + 1)):
+#		KTorrent.log("====>>>>  newAddsBumpUp Display STA Torrent = %s , Priority = %s" % (tor.name(), tor.priority()))

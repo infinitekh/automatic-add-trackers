@@ -1,0 +1,52 @@
+#!/usr/bin/env kross
+# -*- coding: utf-8 -*-
+# Author=Sam
+# Email=sam_ktorrent_wiki at the commercial domain inet-design.
+# Website=http://www.inet-design.com/
+# License=GPL
+# Script repository=http://www.inet-design.com/ktorrent-scripts-and-information.html
+ScriptName = "tracker_light_clean.py"
+# Last Edit Date : 4/27/10 12:51 PM
+#
+# Light cleaning of tracker lists
+#   UnEnable thepiratebay
+#   Add openbittorrent
+#   Add publicbt
+#
+# Use "StopMe = 1" to test on one torrent
+#
+# If you want heavy cleaning see:
+#   http://openbittorrent.com/ >> "I already have .torrent files, how can I add your tracker?"
+#
+
+import KTorrent
+import KTScriptingPlugin
+import Kross
+
+tors = KTorrent.torrents()
+
+StopMe = 1
+#StopMe = len(tors) + 1
+
+KTorrent.log("====>>>>  %s Starting, we have %i torrents to clean up." % ( ScriptName, StopMe ))
+
+countT = 1
+
+for t in tors:
+	tor = KTorrent.torrent(t)
+	for tracker in tor.trackers():
+		if 'piratebay.org' in tracker:
+			tor.setTrackerEnabled(tracker, 0)
+		tor.addTracker("udp://tracker.openbittorrent.com:80/announce")
+		tor.addTracker("http://tracker.openbittorrent.com/announce")
+		tor.setTrackerEnabled("udp://tracker.openbittorrent.com:80/announce",0)
+		tor.setTrackerEnabled("http://tracker.openbittorrent.com/announce",1)
+		tor.addTracker("udp://tracker.publicbt.com:80/announce")
+		tor.addTracker("http://tracker.publicbt.com:80/announce")
+		tor.setTrackerEnabled("udp://tracker.publicbt.com:80/announce",0)
+		tor.setTrackerEnabled("http://tracker.publicbt.com:80/announce",1)
+	if countT == StopMe:
+		break
+	countT = countT + 1
+
+KTorrent.log("====>>>>  %s Last Torrent Info, Torrent = %s , Priority = %s" % ( ScriptName, tor.name(), tor.priority() ))
